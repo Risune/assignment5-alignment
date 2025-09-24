@@ -1,3 +1,4 @@
+import json
 import torch
 import einops
 from cs336_alignment import helper
@@ -15,8 +16,27 @@ def sft_microbatch_train_step(
   return loss, {}
 
 
+def prepare_data(tmpl, json_obj):
+  prompt = tmpl.format(**json_obj)
+  answer = json_obj["answer"]
+  lines = answer.split("\n")
+  output = f"{"".join([f"<think>{s}</think>" for s in lines[:-1]])}<answer>{lines[-1][5:]}</answer>"
+  if output.startswith("<think>"):
+    output = output[len("<think>"):]
+  return prompt, output
+
+
+def prepare_batch(tmpl, data_list, tokenizer):
+  pairs = [prepare_data(tmpl, json.loads(data)) for data in data_list]
+  return helper.tokenize_prompt_and_output([i[0] for i in pairs], [i[1] for i in pairs], tokenizer)
+
+
 def sft_train():
-  ...
+  with open("cs336_alignment/prompts/r1_zero.prompt") as fp:
+    tmpl = fp.read()
+  with open("data/gsm8k/test.jsonl") as fp:
+    line = fp.readline()
+  prepare_data(tmpl, json.loads(line))
 
 
 if __name__ == "__main__":
