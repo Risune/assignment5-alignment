@@ -62,5 +62,4 @@ def masked_normalize(
     normalize_constant: float,
     dim: int | None= None
   ) -> torch.Tensor:
-  masked = tensor.masked_fill(mask == 0, 0.)
-  return torch.sum(masked, dim=dim) / normalize_constant
+  return torch.sum(tensor * mask.long(), dim=dim) / normalize_constant
